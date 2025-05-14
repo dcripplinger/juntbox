@@ -118,7 +118,9 @@ type SemanticColor =
 
 type SemanticColorSet = Record<SemanticColor, string>;
 
-const semanticColors: Record<"light" | "dark", SemanticColorSet> = {
+type Mode = "light" | "dark";
+
+const semanticColors: Record<Mode, SemanticColorSet> = {
   light: {
     action: primitiveColors.blue[500],
     actionAlt: primitiveColors.blue[700],
@@ -195,4 +197,4 @@ const semanticColors: Record<"light" | "dark", SemanticColorSet> = {
 
 export { primitiveColors, semanticColors };
 
-export type { SemanticColorSet };
+export type { Mode, SemanticColorSet };

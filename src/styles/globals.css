@@ -73,8 +73,6 @@ button,
 p,
 span,
 div,
-html,
-body,
 input,
 textarea,
 label,
@@ -89,10 +87,10 @@ ul {
 
 button {
   padding: 0;
-  border: none;
   cursor: pointer;
   background-color: transparent;
   color: inherit;
+  user-select: none;
 }
 
 button:disabled {
