@@ -20,10 +20,15 @@ const StyledButton = styled.button<{
   gap: 0.5rem;
   background-color: ${(p) => p.backgroundColor};
   color: ${(p) => p.textColor};
+  height: ${(p) => p.$height};
+  font-weight: 700;
   border-width: 0.125rem;
+  cursor: pointer;
+  outline-offset: 0.125rem;
   border-style: solid;
   border-color: ${(p) => p.borderColor};
   border-radius: 0.25rem;
+  border-width: 0.125rem;
   ${(p) => (p.$margin ? `margin: ${p.$margin}` : "")}
 
   &:hover {
@@ -94,11 +99,11 @@ const Button = ({
   const contrastAlt = disabled
     ? colors.disabledContrast
     : {
-        action: colors.actionContrast,
-        danger: colors.dangerContrast,
-        success: colors.successContrast,
-        brand: colors.brandContrast,
-        offbrand: colors.offbrandContrast,
+        action: colors.actionContrastAlt,
+        danger: colors.dangerContrastAlt,
+        success: colors.successContrastAlt,
+        brand: colors.brandContrastAlt,
+        offbrand: colors.offbrandContrastAlt,
       }[colorScheme];
 
   // assign colors to css based on prominence
@@ -114,7 +119,7 @@ const Button = ({
   }[prominence];
   const borderColor = {
     primary: main,
-    secondary: contrast,
+    secondary: main,
     tertiary: "transparent",
   }[prominence];
   const hoverBackgroundColor = {

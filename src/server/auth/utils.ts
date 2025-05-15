@@ -66,8 +66,6 @@ const addRole = async (
 const permissionSchema = z.enum([
   "sysadmin", // Has sysadmin privileges. Can refine based on actions if it becomes necessary.
   "user", // For viewing and editing stuff directly about a user.
-  "budget", // For viewing and editing anything in a budget.
-  "budget.delete", // For deleting a budget.
 ]);
 type TPermission = z.infer<typeof permissionSchema>;
 
@@ -133,7 +131,6 @@ const listPermissionsOnEntity = async (
     entityId,
     entityType,
   };
-  // let role: Role | undefined;
   while (nextEntity) {
     // Find the first (and only, due to unique constraint) role for this entity and user,
     // if one is found at all.
