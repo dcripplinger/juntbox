@@ -1,5 +1,5 @@
 // These are the allowed names for icons.
-type TName =
+type IconName =
   | "account_circle"
   | "add"
   | "add_circle_outline"
@@ -20,27 +20,27 @@ type TName =
   | "public"
   | "remove"
   | "search"
-  | "spinner"
   | "star"
   | "star_outline"
   | "warning";
 
+type Size = "1.25rem" | "1.5rem" | "2.5rem" | "3rem";
+
 // These are the props required for any components used as a specific implementation
 // of Icon, e.g. MaterialIconRounded.
-interface IComponentProps {
-  name: TName;
-  fontSize: string;
+interface IconInnerComponentProps {
+  name: IconName;
+  size: Size;
   color: string;
 }
 
 // These are the props for the externally facing Icon component, i.e. the parent
-// component. Its only difference from IComponentProps is that some props are
-// optional.
-interface IIconProps {
-  name: TName;
-  fontSize?: string;
+// component.
+interface IconProps {
+  name: IconName;
+  size?: Size;
   color?: string;
   margin?: string;
 }
 
-export type { TName, IComponentProps, IIconProps };
+export type { IconName, IconInnerComponentProps, IconProps };

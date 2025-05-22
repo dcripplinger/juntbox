@@ -97,10 +97,6 @@ type SemanticColor =
   | "infoAlt"
   | "infoContrast"
   | "infoContrastAlt"
-  | "offbrand"
-  | "offbrandAlt"
-  | "offbrandContrast"
-  | "offbrandContrastAlt"
   | "success"
   | "successAlt"
   | "successContrast"
@@ -126,10 +122,10 @@ const semanticColors: Record<Mode, SemanticColorSet> = {
     actionAlt: primitiveColors.blue[700],
     actionContrast: primitiveColors.white,
     actionContrastAlt: primitiveColors.blue[100],
-    brand: primitiveColors.brandGreen[500],
-    brandAlt: primitiveColors.brandGreen[700],
+    brand: primitiveColors.brandPurple[500],
+    brandAlt: primitiveColors.brandPurple[700],
     brandContrast: primitiveColors.white,
-    brandContrastAlt: primitiveColors.brandGreen[100],
+    brandContrastAlt: primitiveColors.brandPurple[100],
     danger: primitiveColors.red[500],
     dangerAlt: primitiveColors.red[700],
     dangerContrast: primitiveColors.white,
@@ -138,10 +134,6 @@ const semanticColors: Record<Mode, SemanticColorSet> = {
     infoAlt: primitiveColors.skyBlue[700],
     infoContrast: primitiveColors.white,
     infoContrastAlt: primitiveColors.skyBlue[100],
-    offbrand: primitiveColors.brandPurple[500],
-    offbrandAlt: primitiveColors.brandPurple[700],
-    offbrandContrast: primitiveColors.white,
-    offbrandContrastAlt: primitiveColors.brandPurple[100],
     success: primitiveColors.green[500],
     successAlt: primitiveColors.green[700],
     successContrast: primitiveColors.white,
@@ -162,10 +154,10 @@ const semanticColors: Record<Mode, SemanticColorSet> = {
     actionAlt: primitiveColors.blue[300],
     actionContrast: primitiveColors.black,
     actionContrastAlt: primitiveColors.blue[900],
-    brand: primitiveColors.brandGreen[500],
-    brandAlt: primitiveColors.brandGreen[300],
+    brand: primitiveColors.brandPurple[500],
+    brandAlt: primitiveColors.brandPurple[300],
     brandContrast: primitiveColors.black,
-    brandContrastAlt: primitiveColors.brandGreen[900],
+    brandContrastAlt: primitiveColors.brandPurple[900],
     danger: primitiveColors.red[500],
     dangerAlt: primitiveColors.red[300],
     dangerContrast: primitiveColors.white,
@@ -174,10 +166,6 @@ const semanticColors: Record<Mode, SemanticColorSet> = {
     infoAlt: primitiveColors.skyBlue[300],
     infoContrast: primitiveColors.white,
     infoContrastAlt: primitiveColors.skyBlue[900],
-    offbrand: primitiveColors.brandPurple[500],
-    offbrandAlt: primitiveColors.brandPurple[300],
-    offbrandContrast: primitiveColors.black,
-    offbrandContrastAlt: primitiveColors.brandPurple[900],
     success: primitiveColors.green[500],
     successAlt: primitiveColors.green[300],
     successContrast: primitiveColors.white,

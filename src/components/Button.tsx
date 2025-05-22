@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
 import { useTheme } from "./ThemeProvider";
 import styled from "styled-components";
+import type { IconName } from "./Icon/types";
+import Icon from "./Icon/Icon";
 
 const StyledButton = styled.button<{
   backgroundColor: string;
@@ -10,17 +11,20 @@ const StyledButton = styled.button<{
   hoverBorderColor: string;
   outlineColor: string;
   $height: string;
-  fullWidth?: boolean;
+  $width?: string;
+  $flex?: string;
   $margin?: string;
+  iconIsAlone: boolean;
 }>`
-  display: ${(p) => (p.fullWidth ? "flex" : "inline-flex")};
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 0.5rem;
+  padding: ${(p) => (p.iconIsAlone ? "0" : "0 0.5rem")};
   gap: 0.5rem;
   background-color: ${(p) => p.backgroundColor};
   color: ${(p) => p.textColor};
   height: ${(p) => p.$height};
+  min-width: ${(p) => p.$height};
   font-weight: 700;
   border-width: 0.125rem;
   cursor: pointer;
@@ -30,35 +34,43 @@ const StyledButton = styled.button<{
   border-radius: 0.25rem;
   border-width: 0.125rem;
   ${(p) => (p.$margin ? `margin: ${p.$margin}` : "")}
+  ${(p) => (p.$flex ? `flex: ${p.$flex}` : "")}
+  ${(p) => (p.$width ? `width: ${p.$width}` : "")}
 
   &:hover {
     background-color: ${(p) => p.hoverBackgroundColor};
     border-color: ${(p) => p.hoverBorderColor};
   }
 
-  &:focus {
-    outline: 0.0625rem dashed ${(p) => p.outlineColor};
+  &:focus-visible {
+    outline: 0.125rem dashed ${(p) => p.outlineColor};
+  }
+
+  &:disabled {
+    cursor: auto;
   }
 `;
 
 interface Props {
   prominence?: "primary" | "secondary" | "tertiary";
-  colorScheme?: "action" | "danger" | "success" | "brand" | "offbrand";
+  colorScheme?: "action" | "danger" | "success" | "brand";
   disabled?: boolean;
   onClick?: () => void;
   size?: "default" | "small";
   iconPosition?: "left" | "right" | "alone";
-  icon?: ReactNode;
-  fullWidth?: boolean;
+  icon?: IconName;
   margin?: string;
   text?: string;
+  width?: string;
+  flex?: string;
 }
 
 const Button = ({
   disabled,
   onClick,
   icon,
-  fullWidth,
+  width,
+  flex,
   margin,
   text,
   prominence = "primary",
@@ -76,7 +88,6 @@ const Button = ({
         danger: colors.danger,
         success: colors.success,
         brand: colors.brand,
-        offbrand: colors.offbrand,
       }[colorScheme];
   const mainAlt = disabled
     ? colors.disabled
@@ -85,7 +96,6 @@ const Button = ({
         danger: colors.dangerAlt,
         success: colors.successAlt,
         brand: colors.brandAlt,
-        offbrand: colors.offbrandAlt,
       }[colorScheme];
   const contrast = disabled
     ? colors.disabledContrast
@@ -94,7 +104,6 @@ const Button = ({
         danger: colors.dangerContrast,
         success: colors.successContrast,
         brand: colors.brandContrast,
-        offbrand: colors.offbrandContrast,
       }[colorScheme];
   const contrastAlt = disabled
     ? colors.disabledContrast
@@ -103,7 +112,6 @@ const Button = ({
         danger: colors.dangerContrastAlt,
         success: colors.successContrastAlt,
         brand: colors.brandContrastAlt,
-        offbrand: colors.offbrandContrastAlt,
       }[colorScheme];
 
   // assign colors to css based on prominence
@@ -143,12 +151,15 @@ const Button = ({
       outlineColor={colors.outline}
       $height={size === "small" ? "2rem" : "3rem"}
       onClick={onClick}
-      fullWidth={fullWidth}
+      $width={width}
+      $flex={flex}
       $margin={margin}
+      iconIsAlone={iconPosition === "alone"}
+      disabled={disabled}
     >
-      {iconPosition === "left" && icon}
-      {iconPosition === "alone" ? icon : text}
-      {iconPosition === "right" && icon}
+      {iconPosition === "left" && icon && <Icon name={icon} />}
+      {iconPosition === "alone" && icon ? <Icon name={icon} /> : text}
+      {iconPosition === "right" && icon && <Icon name={icon} />}
     </StyledButton>
   );
 };
