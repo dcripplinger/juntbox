@@ -3,6 +3,7 @@ import styled from "styled-components";
 import MaterialIconRounded from "./MaterialIconRounded";
 import NothingIcon from "./NothingIcon";
 import type { IconInnerComponentProps, IconProps, IconName } from "./types";
+import SvgIcon from "./SvgIcon";
 
 /**
  * You can look up what material icons can be included here:
@@ -32,6 +33,7 @@ const components: Record<IconName, FC<IconInnerComponentProps>> = {
   keyboard_double_arrow_right: MaterialIconRounded,
   lock: MaterialIconRounded,
   lock_open: MaterialIconRounded,
+  logo: SvgIcon,
   menu: MaterialIconRounded,
   mouse: MaterialIconRounded,
   nothing: NothingIcon,

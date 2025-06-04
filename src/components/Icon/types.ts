@@ -13,6 +13,7 @@ type IconName =
   | "keyboard_double_arrow_right"
   | "lock"
   | "lock_open"
+  | "logo"
   | "menu"
   | "mouse"
   | "nothing"
