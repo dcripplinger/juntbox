@@ -111,8 +111,11 @@ describe("Button", () => {
     const marginButton = screen.getByRole("button", { name: "With Margin" });
     const flexButton = screen.getByRole("button", { name: "With Flex" });
 
-    expect(widthButton.className).not.toBe(baseButton.className);
-    expect(marginButton.className).not.toBe(baseButton.className);
-    expect(flexButton.className).not.toBe(baseButton.className);
+    expect(baseButton).not.toHaveStyleRule("width");
+    expect(widthButton).toHaveStyleRule("width", "240px");
+    expect(baseButton).not.toHaveStyleRule("margin");
+    expect(marginButton).toHaveStyleRule("margin", "8px");
+    expect(baseButton).not.toHaveStyleRule("flex");
+    expect(flexButton).toHaveStyleRule("flex", "1");
   });
 });
