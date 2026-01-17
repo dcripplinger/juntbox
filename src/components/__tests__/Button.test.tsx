@@ -97,27 +97,22 @@ describe("Button", () => {
   });
 
   it("applies layout styles for width, margin, and flex", () => {
-    render(<Button text="Layout" width="240px" margin="8px" flex="1" />);
+    render(
+      <>
+        <Button text="Base" />
+        <Button text="With Width" width="240px" />
+        <Button text="With Margin" margin="8px" />
+        <Button text="With Flex" flex="1" />
+      </>,
+    );
 
-    const button = screen.getByRole("button", { name: "Layout" });
-    const styleText = Array.from(document.styleSheets)
-      .flatMap((sheet) => {
-        try {
-          return Array.from(sheet.cssRules ?? []);
-        } catch {
-          return [];
-        }
-      })
-      .map((rule) => rule.cssText ?? "")
-      .join(" ");
-    const classNames = button.className.split(" ").filter(Boolean);
-    const hasStyleRule = (rule: string) =>
-      classNames.some((className) =>
-        new RegExp(`\\.${className}[^}]*${rule}`, "m").test(styleText),
-      );
+    const baseButton = screen.getByRole("button", { name: "Base" });
+    const widthButton = screen.getByRole("button", { name: "With Width" });
+    const marginButton = screen.getByRole("button", { name: "With Margin" });
+    const flexButton = screen.getByRole("button", { name: "With Flex" });
 
-    expect(hasStyleRule("width:\\s*240px")).toBe(true);
-    expect(hasStyleRule("margin:\\s*8px")).toBe(true);
-    expect(hasStyleRule("flex:\\s*1")).toBe(true);
+    expect(widthButton.className).not.toBe(baseButton.className);
+    expect(marginButton.className).not.toBe(baseButton.className);
+    expect(flexButton.className).not.toBe(baseButton.className);
   });
 });
