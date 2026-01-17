@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import Button from "../Button";
 
@@ -17,5 +17,96 @@ describe("Button", () => {
     render(<Button text="Save" disabled />);
 
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  });
+
+  it("calls onClick when enabled", () => {
+    const onClick = vi.fn();
+    render(<Button text="Save" onClick={onClick} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onClick when disabled", () => {
+    const onClick = vi.fn();
+    render(<Button text="Save" onClick={onClick} disabled />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("renders icon on the left by default", () => {
+    render(<Button text="Save" icon="add" />);
+
+    const button = screen.getByRole("button");
+    const [firstNode, secondNode] = Array.from(button.childNodes);
+
+    expect(button.querySelector(".material-icons-round")).toHaveTextContent(
+      "add",
+    );
+    expect(firstNode?.nodeName).toBe("DIV");
+    expect(secondNode?.nodeType).toBe(Node.TEXT_NODE);
+    expect(secondNode?.textContent).toBe("Save");
+  });
+
+  it("renders icon on the right when configured", () => {
+    render(<Button text="Save" icon="add" iconPosition="right" />);
+
+    const button = screen.getByRole("button");
+    const [firstNode, secondNode] = Array.from(button.childNodes);
+
+    expect(button.querySelector(".material-icons-round")).toHaveTextContent(
+      "add",
+    );
+    expect(firstNode?.nodeType).toBe(Node.TEXT_NODE);
+    expect(firstNode?.textContent).toBe("Save");
+    expect(secondNode?.nodeName).toBe("DIV");
+  });
+
+  it("renders icon alone when iconPosition is alone", () => {
+    render(<Button text="Save" icon="add" iconPosition="alone" />);
+
+    const button = screen.getByRole("button");
+
+    expect(button.childNodes).toHaveLength(1);
+    expect(button.querySelector(".material-icons-round")).toHaveTextContent(
+      "add",
+    );
+    expect(button).not.toHaveTextContent("Save");
+  });
+
+  it("applies size styles for small and default", () => {
+    render(
+      <>
+        <Button text="Default" />
+        <Button text="Small" size="small" />
+      </>,
+    );
+
+    const [defaultButton, smallButton] = screen.getAllByRole("button");
+    const defaultStyles = getComputedStyle(defaultButton);
+    const smallStyles = getComputedStyle(smallButton);
+
+    expect(parseFloat(smallStyles.height)).toBeLessThan(
+      parseFloat(defaultStyles.height),
+    );
+    expect(smallStyles.height).toBe(smallStyles.minWidth);
+    expect(defaultStyles.height).toBe(defaultStyles.minWidth);
+  });
+
+  it("applies layout styles for width, margin, and flex", () => {
+    render(<Button text="Layout" width="240px" margin="8px" flex="1" />);
+
+    const button = screen.getByRole("button", { name: "Layout" });
+    const styles = getComputedStyle(button);
+
+    expect(styles.width).toBe("240px");
+    expect(styles.marginTop).toBe("8px");
+    expect(styles.marginRight).toBe("8px");
+    expect(styles.marginBottom).toBe("8px");
+    expect(styles.marginLeft).toBe("8px");
+    expect(styles.flexGrow).toBe("1");
   });
 });
