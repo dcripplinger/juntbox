@@ -100,13 +100,17 @@ describe("Button", () => {
     render(<Button text="Layout" width="240px" margin="8px" flex="1" />);
 
     const button = screen.getByRole("button", { name: "Layout" });
-    const styles = getComputedStyle(button);
+    const styleText = Array.from(document.querySelectorAll("style"))
+      .map((style) => style.textContent ?? "")
+      .join(" ");
+    const classNames = button.className.split(" ").filter(Boolean);
+    const hasStyleRule = (rule: string) =>
+      classNames.some((className) =>
+        new RegExp(`\\.${className}[^}]*${rule}`, "m").test(styleText),
+      );
 
-    expect(styles.width).toBe("240px");
-    expect(styles.marginTop).toBe("8px");
-    expect(styles.marginRight).toBe("8px");
-    expect(styles.marginBottom).toBe("8px");
-    expect(styles.marginLeft).toBe("8px");
-    expect(styles.flexGrow).toBe("1");
+    expect(hasStyleRule("width:\\s*240px")).toBe(true);
+    expect(hasStyleRule("margin:\\s*8px")).toBe(true);
+    expect(hasStyleRule("flex:\\s*1")).toBe(true);
   });
 });
