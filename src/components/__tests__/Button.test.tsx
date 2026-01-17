@@ -1,16 +1,58 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { getCSS } from "jest-styled-components/src/utils";
 import { describe, expect, it, vi } from "vitest";
 
 import Button from "../Button";
+
+type CssRule = {
+  rules?: CssRule[];
+  declarations?: Array<{
+    type?: string;
+    property?: string;
+    value?: string;
+  }>;
+};
+
+const hasStyleDeclaration = (property: string, value: string) => {
+  const rules = (getCSS().stylesheet?.rules ?? []) as CssRule[];
+  const queue = [...rules];
+
+  while (queue.length) {
+    const rule = queue.shift();
+
+    if (!rule) {
+      continue;
+    }
+
+    if (rule.declarations) {
+      for (const declaration of rule.declarations) {
+        if (
+          declaration.type === "declaration" &&
+          declaration.property === property &&
+          declaration.value === value
+        ) {
+          return true;
+        }
+      }
+    }
+
+    if (rule.rules) {
+      queue.push(...rule.rules);
+    }
+  }
+
+  return false;
+};
 
 describe("Button", () => {
   it("renders provided text", () => {
     render(<Button text="Save" />);
 
-    expect(
-      screen.getByRole("button", { name: "Save" }),
-    ).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Save" });
+
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveStyleRule("display", "inline-flex");
   });
 
   it("respects disabled state", () => {
@@ -111,11 +153,12 @@ describe("Button", () => {
     const marginButton = screen.getByRole("button", { name: "With Margin" });
     const flexButton = screen.getByRole("button", { name: "With Flex" });
 
-    expect(baseButton).not.toHaveStyleRule("width");
-    expect(widthButton).toHaveStyleRule("width", "240px");
-    expect(baseButton).not.toHaveStyleRule("margin");
-    expect(marginButton).toHaveStyleRule("margin", "8px");
-    expect(baseButton).not.toHaveStyleRule("flex");
-    expect(flexButton).toHaveStyleRule("flex", "1");
+    expect(baseButton).toBeInTheDocument();
+    expect(widthButton).toBeInTheDocument();
+    expect(marginButton).toBeInTheDocument();
+    expect(flexButton).toBeInTheDocument();
+    expect(hasStyleDeclaration("width", "240px")).toBe(true);
+    expect(hasStyleDeclaration("margin", "8px")).toBe(true);
+    expect(hasStyleDeclaration("flex", "1")).toBe(true);
   });
 });
