@@ -100,8 +100,15 @@ describe("Button", () => {
     render(<Button text="Layout" width="240px" margin="8px" flex="1" />);
 
     const button = screen.getByRole("button", { name: "Layout" });
-    const styleText = Array.from(document.querySelectorAll("style"))
-      .map((style) => style.textContent ?? "")
+    const styleText = Array.from(document.styleSheets)
+      .flatMap((sheet) => {
+        try {
+          return Array.from(sheet.cssRules ?? []);
+        } catch {
+          return [];
+        }
+      })
+      .map((rule) => rule.cssText ?? "")
       .join(" ");
     const classNames = button.className.split(" ").filter(Boolean);
     const hasStyleRule = (rule: string) =>
