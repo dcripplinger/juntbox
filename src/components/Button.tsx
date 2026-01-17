@@ -33,9 +33,9 @@ const StyledButton = styled.button<{
   border-color: ${(p) => p.borderColor};
   border-radius: 0.25rem;
   border-width: 0.125rem;
-  ${(p) => (p.$margin ? `margin: ${p.$margin}` : "")}
-  ${(p) => (p.$flex ? `flex: ${p.$flex}` : "")}
-  ${(p) => (p.$width ? `width: ${p.$width}` : "")}
+  ${(p) => (p.$margin ? `margin: ${p.$margin};` : "")}
+  ${(p) => (p.$flex ? `flex: ${p.$flex};` : "")}
+  ${(p) => (p.$width ? `width: ${p.$width};` : "")}
 
   &:hover {
     background-color: ${(p) => p.hoverBackgroundColor};
