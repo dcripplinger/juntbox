@@ -33,5 +33,5 @@ and prod via the shell where they are deployed.
 
 In nonlocal environments (dev and prod), we need to run the production version
 of nextjs to serve up the web app. The build script should be
-`yarn db:migrate && yarn db:client && yarn build`. Then the launch script should
+`yarn db:migrate && yarn db:generate && yarn build`. Then the launch script should
 be `yarn start`.

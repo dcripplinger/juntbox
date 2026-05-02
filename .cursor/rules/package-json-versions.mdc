@@ -1,0 +1,14 @@
+---
+description: Pin exact versions for runtime dependencies in package.json; use semver ranges for devDependencies only.
+globs: package.json
+alwaysApply: false
+---
+
+# package.json versioning
+
+This repo is a **standalone application**, not a published library.
+
+- **`dependencies`**: use **exact versions** (no `^`, `~`, or `>=`). Example: `"next": "15.5.15"` not `"next": "^15.5.15"`.
+- **`devDependencies`**: **`^` is fine** (and preferred) for minor/patch flexibility on tooling.
+
+When adding or bumping packages, update `package.json` to match this policy and let the lockfile record the resolved tree.
