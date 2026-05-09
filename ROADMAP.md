@@ -75,4 +75,4 @@ up a junt:
 The app will come prepackaged with a basic UI library. This includes baseline
 css, primitive and semantic colors, links, buttons, dropdowns, modals,
 breakpoints, icons, toggles, checkboxes, tables, and more. The library will be
-showcased in storybook as a page in the app.
+showcased on the in-app `/docs` page.

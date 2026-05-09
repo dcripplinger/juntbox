@@ -17,9 +17,7 @@
     "makesysadmin": "tsx src/scripts/makesysadmin.ts",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.11.2",
@@ -43,15 +41,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.7",
     "@eslint/eslintrc": "^3.3.3",
-    "@storybook/addon-essentials": "^8.6.18",
-    "@storybook/addon-onboarding": "^8.6.18",
-    "@storybook/blocks": "^8.6.18",
-    "@storybook/experimental-addon-test": "^8.6.18",
-    "@storybook/experimental-nextjs-vite": "^8.6.18",
-    "@storybook/react": "^8.6.18",
-    "@storybook/test": "8.6.15",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -65,12 +55,10 @@
     "babel-plugin-styled-components": "^2.1.4",
     "eslint": "^9.39.4",
     "eslint-config-next": "^15.5.15",
-    "eslint-plugin-storybook": "^0.12.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.59.1",
     "prettier": "^3.8.3",
     "prisma": "^6.19.3",
-    "storybook": "^8.6.18",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.1",
     "vite": "^6.4.2",
