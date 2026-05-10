@@ -1,8 +1,9 @@
+import { useRef } from "react";
 import styled from "styled-components";
 import ThemeProvider from "~/components/ThemeProvider";
 import Button from "~/components/Button";
 import Icon, { iconNames } from "~/components/Icon/Icon";
-import { NavBar } from "~/components/NavBar";
+import { NavBar, type NavBarLink } from "~/components/NavBar";
 import {
   primitiveColors,
   semanticColors,
@@ -203,19 +204,99 @@ const IconLabel = styled.span`
 `;
 
 // ---------------------------------------------------------------------------
-// NavBar preview
+// NavBar demo shells
 // ---------------------------------------------------------------------------
 
-const NavBarPreviewFrame = styled.div`
-  position: relative;
-  height: 3.5rem;
+/** Each NavBar demo uses its own fragment so link clicks do not jump to the top of the whole NavBar section. */
+function makeDemoNavLinks(demoSectionId: string): {
+  publicLinks: NavBarLink[];
+  userLinks: NavBarLink[];
+  projectLinks: NavBarLink[];
+} {
+  const h = `#${demoSectionId}`;
+  return {
+    publicLinks: [
+      { href: h, label: "Home" },
+      { href: h, label: "Features" },
+      { href: h, label: "Pricing" },
+      { href: h, label: "About" },
+    ],
+    userLinks: [
+      { href: h, label: "Log In" },
+      { href: h, label: "Sign Up" },
+      { href: h, label: "Profile" },
+      { href: h, label: "Settings" },
+    ],
+    projectLinks: [
+      { href: h, label: "Dashboard" },
+      { href: h, label: "My Tasks" },
+      { href: h, label: "Project Settings" },
+    ],
+  };
+}
+
+/**
+ * Outer frame. overflow:hidden both clips content to the frame boundary and
+ * creates a scroll container so the sticky NavBar doesn't escape the demo.
+ */
+const NavBarDemoShell = styled.div<{ $narrow?: boolean }>`
+  display: flex;
+  flex-direction: column;
   border: 1px solid #ccc;
   border-radius: 4px;
+  min-height: 360px;
+  max-width: ${(p) => (p.$narrow ? "22rem" : "100%")};
+  margin-bottom: 1.5rem;
   overflow: hidden;
-  margin-bottom: 1rem;
-  /* transform creates a new stacking/containing block so position:fixed
-     NavBar stays inside this frame instead of the viewport */
-  transform: translateZ(0);
+  background: #fff;
+  font-size: 0.875rem;
+  color: #333;
+`;
+
+const DemoMain = styled.div`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.25rem;
+`;
+
+const DemoHeading = styled.h1`
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  color: #111;
+`;
+
+const DemoSubheading = styled.h2`
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+  color: #333;
+`;
+
+const DemoParagraph = styled.p`
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+  color: #555;
+`;
+
+const DemoCard = styled.div`
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DemoBadge = styled.span<{ $color: string }>`
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: ${(p) => p.$color};
+  color: #fff;
+  font-weight: 600;
 `;
 
 const PreviewCaption = styled.p`
@@ -245,6 +326,9 @@ const buttonProminences = ["primary", "secondary", "tertiary"] as const;
 const buttonColorSchemes = ["action", "danger", "success", "brand"] as const;
 
 export default function DocsPage() {
+  const publicDesktopScrollRef = useRef<HTMLDivElement>(null);
+  const publicMobileScrollRef = useRef<HTMLDivElement>(null);
+
   return (
     <ThemeProvider>
       <PageLayout>
@@ -370,28 +454,130 @@ export default function DocsPage() {
             <SectionTitle>NavBar</SectionTitle>
 
             <SectionSubtitle>Public page, desktop</SectionSubtitle>
-            <PreviewCaption>isPublicPage=true, isMobile=false</PreviewCaption>
-            <NavBarPreviewFrame>
-              <NavBar isPublicPage isMobile={false} />
-            </NavBarPreviewFrame>
+            <PreviewCaption>isPublicPage=true, isMobile=false — scroll inside the frame to see the bar hide</PreviewCaption>
+            <NavBarDemoShell id="navbar-demo-public-desktop">
+              <NavBar
+                isPublicPage
+                isMobile={false}
+                {...makeDemoNavLinks("navbar-demo-public-desktop")}
+                scrollRootRef={publicDesktopScrollRef}
+              />
+              <DemoMain ref={publicDesktopScrollRef}>
+                <DemoHeading>Build better products, together.</DemoHeading>
+                <DemoParagraph>
+                  Juntbox brings your entire team's work into one place so you
+                  can ship with confidence. No more scattered threads, lost
+                  decisions, or surprise blockers.
+                </DemoParagraph>
+                <DemoParagraph>
+                  Whether you're a two-person startup or a scaling org, Juntbox
+                  adapts to how you work—not the other way around.
+                </DemoParagraph>
+                <DemoSubheading>Everything you need</DemoSubheading>
+                <DemoParagraph>
+                  Real-time collaboration, role-based access, instant project
+                  setup, and a timeline that actually tells the truth. Scroll up
+                  to see the nav reappear.
+                </DemoParagraph>
+                <DemoParagraph>
+                  Integrations with the tools you already use: GitHub, Figma,
+                  Slack, and more. Get started in minutes.
+                </DemoParagraph>
+                <DemoSubheading>Loved by teams</DemoSubheading>
+                <DemoParagraph>
+                  Join thousands of teams who've made Juntbox the center of
+                  their workflow. Transparent pricing, no surprise fees.
+                </DemoParagraph>
+              </DemoMain>
+            </NavBarDemoShell>
 
             <SectionSubtitle>Public page, mobile</SectionSubtitle>
-            <PreviewCaption>isPublicPage=true, isMobile=true</PreviewCaption>
-            <NavBarPreviewFrame>
-              <NavBar isPublicPage isMobile />
-            </NavBarPreviewFrame>
+            <PreviewCaption>isPublicPage=true, isMobile=true — hamburger menu; scroll to see hide/show</PreviewCaption>
+            <NavBarDemoShell id="navbar-demo-public-mobile" $narrow>
+              <NavBar
+                isPublicPage
+                isMobile
+                {...makeDemoNavLinks("navbar-demo-public-mobile")}
+                scrollRootRef={publicMobileScrollRef}
+              />
+              <DemoMain ref={publicMobileScrollRef}>
+                <DemoHeading>Build better products, together.</DemoHeading>
+                <DemoParagraph>
+                  Juntbox brings your entire team's work into one place so you
+                  can ship with confidence.
+                </DemoParagraph>
+                <DemoParagraph>
+                  Whether you're a two-person startup or a scaling org, Juntbox
+                  adapts to how you work.
+                </DemoParagraph>
+                <DemoSubheading>Everything you need</DemoSubheading>
+                <DemoParagraph>
+                  Real-time collaboration, role-based access, instant project
+                  setup. Scroll up to see the nav reappear.
+                </DemoParagraph>
+                <DemoParagraph>
+                  Integrations with GitHub, Figma, Slack, and more. Get started
+                  in minutes with transparent pricing.
+                </DemoParagraph>
+              </DemoMain>
+            </NavBarDemoShell>
 
             <SectionSubtitle>App page, mobile (hamburger)</SectionSubtitle>
-            <PreviewCaption>isPublicPage=false, isMobile=true</PreviewCaption>
-            <NavBarPreviewFrame>
-              <NavBar isPublicPage={false} isMobile />
-            </NavBarPreviewFrame>
+            <PreviewCaption>isPublicPage=false, isMobile=true — project links in hamburger menu</PreviewCaption>
+            <NavBarDemoShell id="navbar-demo-app-mobile" $narrow>
+              <NavBar
+                isPublicPage={false}
+                isMobile
+                {...makeDemoNavLinks("navbar-demo-app-mobile")}
+              />
+              <DemoMain>
+                <DemoSubheading>My Projects</DemoSubheading>
+                <DemoCard>
+                  <span>Project Alpha</span>
+                  <DemoBadge $color="#2563eb">In Progress</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Beta</span>
+                  <DemoBadge $color="#7c3aed">Planning</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Gamma</span>
+                  <DemoBadge $color="#16a34a">Completed</DemoBadge>
+                </DemoCard>
+                <DemoSubheading>Recent Activity</DemoSubheading>
+                <DemoParagraph>Alice pushed 3 commits to Project Alpha.</DemoParagraph>
+                <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
+              </DemoMain>
+            </NavBarDemoShell>
 
             <SectionSubtitle>App page, desktop</SectionSubtitle>
-            <PreviewCaption>isPublicPage=false, isMobile=false</PreviewCaption>
-            <NavBarPreviewFrame>
-              <NavBar isPublicPage={false} isMobile={false} />
-            </NavBarPreviewFrame>
+            <PreviewCaption>isPublicPage=false, isMobile=false — user menu on the right</PreviewCaption>
+            <NavBarDemoShell id="navbar-demo-app-desktop">
+              <NavBar
+                isPublicPage={false}
+                isMobile={false}
+                {...makeDemoNavLinks("navbar-demo-app-desktop")}
+              />
+              <DemoMain>
+                <DemoSubheading>My Projects</DemoSubheading>
+                <DemoCard>
+                  <span>Project Alpha</span>
+                  <DemoBadge $color="#2563eb">In Progress</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Beta</span>
+                  <DemoBadge $color="#7c3aed">Planning</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Gamma</span>
+                  <DemoBadge $color="#16a34a">Completed</DemoBadge>
+                </DemoCard>
+                <DemoSubheading>Recent Activity</DemoSubheading>
+                <DemoParagraph>Alice pushed 3 commits to Project Alpha.</DemoParagraph>
+                <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
+                <DemoParagraph>Carol updated the roadmap for Project Gamma.</DemoParagraph>
+              </DemoMain>
+            </NavBarDemoShell>
           </Section>
         </Content>
       </PageLayout>

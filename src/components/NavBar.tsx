@@ -1,28 +1,56 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
 import styled from "styled-components";
 import { useTheme } from "./ThemeProvider";
 import Link from "next/link";
 import Icon from "./Icon/Icon";
 
+export type NavBarLink = { href: string; label: string };
+
 interface Props {
   isPublicPage: boolean;
   isMobile: boolean;
-  projectLinks?: Array<{ href: string; label: string }>;
+  publicLinks: NavBarLink[];
+  userLinks: NavBarLink[];
+  projectLinks: NavBarLink[];
+  /**
+   * Ref to the element whose scroll drives the public-page hide/show animation.
+   * Omit to use window scroll (for full-page layouts where the document scrolls).
+   * Pass a ref to whichever element actually scrolls when the nav lives inside a
+   * bounded shell with its own scrollport (e.g. a container with overflow-y: auto).
+   *
+   * Parent responsibility: supply a flex-column shell so the nav occupies its
+   * natural 3rem at the top and sibling content fills the remainder. Unlike a
+   * fixed bar, this component does not float over content—the parent lays out
+   * the header and content side by side.
+   */
+  scrollRootRef?: RefObject<HTMLElement | null>;
 }
 
-const Container = styled.nav<{ show: boolean; backgroundColor: string }>`
-  position: fixed;
+/**
+ * Outer wrapper: sticky within the nearest scroll container (either a bounded
+ * shell or the viewport), animates height so layout space collapses cleanly
+ * when the bar hides. overflow switches to visible when a menu is open so
+ * dropdowns are not clipped.
+ */
+const StickySlot = styled.div<{ $show: boolean; $hasOpenMenu: boolean }>`
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
+  flex-shrink: 0;
+  z-index: 1000;
+  height: ${(props) => (props.$show ? "3rem" : "0")};
+  overflow: ${(props) => (props.$hasOpenMenu ? "visible" : "hidden")};
+  transition: height 0.3s ease-in-out;
+`;
+
+const Container = styled.nav<{ backgroundColor: string }>`
   height: 3rem;
+  width: 100%;
   background-color: ${({ backgroundColor }) => backgroundColor};
   display: flex;
   align-items: center;
   padding: 0 1rem;
-  z-index: 1000;
-  transition: transform 0.3s ease-in-out;
-  transform: translateY(${(props) => (props.show ? "0" : "-100%")});
+  position: relative;
 `;
 
 const PublicLinks = styled.div`
@@ -89,38 +117,24 @@ const Logo = styled(Link)<{ textColor: string }>`
   color: ${({ textColor }) => textColor};
 `;
 
-const publicLinks = [
-  { href: "/", label: "Home" },
-  { href: "/features", label: "Features" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/about", label: "About" },
-];
-
-const userLinks = [
-  { href: "/login", label: "Log In" },
-  { href: "/signup", label: "Sign Up" },
-  { href: "/profile", label: "Profile" },
-  { href: "/settings", label: "Settings" },
-];
-
-const useScrollDirection = () => {
+const useScrollDirection = (scrollRootRef?: RefObject<HTMLElement | null>) => {
   const [show, setShow] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
+    const target: EventTarget = scrollRootRef?.current ?? window;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY) {
-        setShow(false);
-      } else {
-        setShow(true);
-      }
-      setLastScrollY(currentScrollY);
+      const current = scrollRootRef?.current
+        ? scrollRootRef.current.scrollTop
+        : window.scrollY;
+      setShow(current <= lastScrollY.current);
+      lastScrollY.current = current;
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+    target.addEventListener("scroll", handleScroll);
+    return () => target.removeEventListener("scroll", handleScroll);
+  }, [scrollRootRef]);
 
   return show;
 };
@@ -128,15 +142,15 @@ const useScrollDirection = () => {
 export const NavBar = ({
   isPublicPage,
   isMobile,
-  projectLinks = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/settings", label: "Project Settings" },
-  ],
+  publicLinks,
+  userLinks,
+  projectLinks,
+  scrollRootRef,
 }: Props) => {
   const { colors } = useTheme();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const showNav = useScrollDirection();
+  const showNav = useScrollDirection(scrollRootRef);
 
   const toggleHamburger = () => {
     setIsHamburgerOpen(!isHamburgerOpen);
@@ -148,82 +162,57 @@ export const NavBar = ({
     setIsHamburgerOpen(false);
   };
 
-  return (
-    <Container
-      show={isPublicPage ? showNav : true}
-      backgroundColor={colors.surfaceLighter}
-    >
-      {isPublicPage && !isMobile ? (
-        <PublicLinks>
-          <Logo href="/" textColor={colors.offbrand}>
-            <Icon name="logo" />
-          </Logo>
-          {publicLinks.slice(1).map((link) => (
-            <Link key={link.href} href={link.href}>
-              {link.label}
-            </Link>
-          ))}
-        </PublicLinks>
-      ) : (
-        <IconButton onClick={toggleHamburger} textColor={colors.text}>
-          <Icon name="menu" />
-        </IconButton>
-      )}
-      {isHamburgerOpen && (
-        <Dropdown backgroundColor={colors.surfaceLighter}>
-          {!isPublicPage && isMobile && (
-            <DropdownSection borderColor={colors.border}>
-              {projectLinks.map((link) => (
-                <DropdownItem
-                  key={link.href}
-                  href={link.href}
-                  textColor={colors.text}
-                  hoverBackgroundColor={colors.surface}
-                >
-                  {link.label}
-                </DropdownItem>
-              ))}
-            </DropdownSection>
-          )}
-          <DropdownSection borderColor={colors.border}>
-            {publicLinks.map((link) => (
-              <DropdownItem
-                key={link.href}
-                href={link.href}
-                textColor={colors.text}
-                hoverBackgroundColor={colors.surface}
-              >
-                {link.label}
-              </DropdownItem>
-            ))}
-          </DropdownSection>
-          {isMobile && (
-            <DropdownSection borderColor={colors.border}>
-              {userLinks.map((link) => (
-                <DropdownItem
-                  key={link.href}
-                  href={link.href}
-                  textColor={colors.text}
-                  hoverBackgroundColor={colors.surface}
-                >
-                  {link.label}
-                </DropdownItem>
-              ))}
-            </DropdownSection>
-          )}
-        </Dropdown>
-      )}
+  const show = isPublicPage ? showNav : true;
+  const hasOpenMenu = isHamburgerOpen || isUserMenuOpen;
 
-      {!isMobile && (
-        <>
-          <UserButton onClick={toggleUserMenu} textColor={colors.text}>
-            <Icon name="account_circle" />
-          </UserButton>
-          {isUserMenuOpen && (
-            <Dropdown
-              backgroundColor={colors.surfaceLighter}
-              style={{ right: 0 }}
-            >
+  return (
+    <StickySlot $show={show} $hasOpenMenu={hasOpenMenu}>
+      <Container backgroundColor={colors.surfaceLighter}>
+        {isPublicPage && !isMobile ? (
+          <PublicLinks>
+            <Logo href={publicLinks[0]?.href ?? "/"} textColor={colors.offbrand}>
+              <Icon name="logo" />
+            </Logo>
+            {publicLinks.slice(1).map((link) => (
+              <Link key={link.href} href={link.href}>
+                {link.label}
+              </Link>
+            ))}
+          </PublicLinks>
+        ) : (
+          <IconButton onClick={toggleHamburger} textColor={colors.text}>
+            <Icon name="menu" />
+          </IconButton>
+        )}
+        {isHamburgerOpen && (
+          <Dropdown backgroundColor={colors.surfaceLighter}>
+            {!isPublicPage && isMobile && (
+              <DropdownSection borderColor={colors.border}>
+                {projectLinks.map((link) => (
+                  <DropdownItem
+                    key={link.href}
+                    href={link.href}
+                    textColor={colors.text}
+                    hoverBackgroundColor={colors.surface}
+                  >
+                    {link.label}
+                  </DropdownItem>
+                ))}
+              </DropdownSection>
+            )}
+            <DropdownSection borderColor={colors.border}>
+              {publicLinks.map((link) => (
+                <DropdownItem
+                  key={link.href}
+                  href={link.href}
+                  textColor={colors.text}
+                  hoverBackgroundColor={colors.surface}
+                >
+                  {link.label}
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+            {isMobile && (
               <DropdownSection borderColor={colors.border}>
                 {userLinks.map((link) => (
                   <DropdownItem
@@ -236,10 +225,37 @@ export const NavBar = ({
                   </DropdownItem>
                 ))}
               </DropdownSection>
-            </Dropdown>
-          )}
-        </>
-      )}
-    </Container>
+            )}
+          </Dropdown>
+        )}
+
+        {!isMobile && (
+          <>
+            <UserButton onClick={toggleUserMenu} textColor={colors.text}>
+              <Icon name="account_circle" />
+            </UserButton>
+            {isUserMenuOpen && (
+              <Dropdown
+                backgroundColor={colors.surfaceLighter}
+                style={{ right: 0 }}
+              >
+                <DropdownSection borderColor={colors.border}>
+                  {userLinks.map((link) => (
+                    <DropdownItem
+                      key={link.href}
+                      href={link.href}
+                      textColor={colors.text}
+                      hoverBackgroundColor={colors.surface}
+                    >
+                      {link.label}
+                    </DropdownItem>
+                  ))}
+                </DropdownSection>
+              </Dropdown>
+            )}
+          </>
+        )}
+      </Container>
+    </StickySlot>
   );
 };
