@@ -522,41 +522,13 @@ export default function DocsPage() {
               </DemoMain>
             </NavBarDemoShell>
 
-            <SectionSubtitle>App page, mobile (hamburger)</SectionSubtitle>
-            <PreviewCaption>isPublicPage=false, isMobile=true — project links in hamburger menu</PreviewCaption>
-            <NavBarDemoShell id="navbar-demo-app-mobile" $narrow>
-              <NavBar
-                isPublicPage={false}
-                isMobile
-                {...makeDemoNavLinks("navbar-demo-app-mobile")}
-              />
-              <DemoMain>
-                <DemoSubheading>My Projects</DemoSubheading>
-                <DemoCard>
-                  <span>Project Alpha</span>
-                  <DemoBadge $color="#2563eb">In Progress</DemoBadge>
-                </DemoCard>
-                <DemoCard>
-                  <span>Project Beta</span>
-                  <DemoBadge $color="#7c3aed">Planning</DemoBadge>
-                </DemoCard>
-                <DemoCard>
-                  <span>Project Gamma</span>
-                  <DemoBadge $color="#16a34a">Completed</DemoBadge>
-                </DemoCard>
-                <DemoSubheading>Recent Activity</DemoSubheading>
-                <DemoParagraph>Alice pushed 3 commits to Project Alpha.</DemoParagraph>
-                <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
-              </DemoMain>
-            </NavBarDemoShell>
-
-            <SectionSubtitle>App page, desktop</SectionSubtitle>
+            <SectionSubtitle>Private page, desktop</SectionSubtitle>
             <PreviewCaption>isPublicPage=false, isMobile=false — user menu on the right</PreviewCaption>
-            <NavBarDemoShell id="navbar-demo-app-desktop">
+            <NavBarDemoShell id="navbar-demo-private-desktop">
               <NavBar
                 isPublicPage={false}
                 isMobile={false}
-                {...makeDemoNavLinks("navbar-demo-app-desktop")}
+                {...makeDemoNavLinks("navbar-demo-private-desktop")}
               />
               <DemoMain>
                 <DemoSubheading>My Projects</DemoSubheading>
@@ -576,6 +548,34 @@ export default function DocsPage() {
                 <DemoParagraph>Alice pushed 3 commits to Project Alpha.</DemoParagraph>
                 <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
                 <DemoParagraph>Carol updated the roadmap for Project Gamma.</DemoParagraph>
+              </DemoMain>
+            </NavBarDemoShell>
+
+            <SectionSubtitle>Private page, mobile (hamburger)</SectionSubtitle>
+            <PreviewCaption>isPublicPage=false, isMobile=true — project links in hamburger menu</PreviewCaption>
+            <NavBarDemoShell id="navbar-demo-private-mobile" $narrow>
+              <NavBar
+                isPublicPage={false}
+                isMobile
+                {...makeDemoNavLinks("navbar-demo-private-mobile")}
+              />
+              <DemoMain>
+                <DemoSubheading>My Projects</DemoSubheading>
+                <DemoCard>
+                  <span>Project Alpha</span>
+                  <DemoBadge $color="#2563eb">In Progress</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Beta</span>
+                  <DemoBadge $color="#7c3aed">Planning</DemoBadge>
+                </DemoCard>
+                <DemoCard>
+                  <span>Project Gamma</span>
+                  <DemoBadge $color="#16a34a">Completed</DemoBadge>
+                </DemoCard>
+                <DemoSubheading>Recent Activity</DemoSubheading>
+                <DemoParagraph>Alice pushed 3 commits to Project Alpha.</DemoParagraph>
+                <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
               </DemoMain>
             </NavBarDemoShell>
           </Section>

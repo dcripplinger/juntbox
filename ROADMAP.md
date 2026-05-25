@@ -76,3 +76,80 @@ The app will come prepackaged with a basic UI library. This includes baseline
 css, primitive and semantic colors, links, buttons, dropdowns, modals,
 breakpoints, icons, toggles, checkboxes, tables, and more. The library will be
 showcased on the in-app `/docs` page.
+
+### Overlays (Popover, Modal, Dropdown menu) — Option B: Radix + styled-components
+
+Use **Radix primitives** for behavior and accessibility; own **styled-components**
+wrappers and theme tokens (same pattern as `Button`). Do **not** build Modal on
+top of Popover as one component — share infrastructure only.
+
+**Dependencies (add as needed):**
+
+- `@radix-ui/react-popover` — anchored, non-blocking panels
+- `@radix-ui/react-dialog` — blocking modals / dialogs
+- `@radix-ui/react-dropdown-menu` — later, for list menus (e.g. NavBar); menu
+  keyboard semantics differ from a generic popover
+
+**Definitions:**
+
+| | Popover | Modal (Dialog) |
+|---|---|---|
+| Anchor | Yes — tied to a trigger element | No — positioned in viewport |
+| Interaction outside | Allowed | Blocked (even if backdrop is transparent) |
+| Outside click | Closes | Configurable: ignore or close |
+| Focus | Optional move into panel; restore on close | Trapped inside; restore on close |
+| Scroll | Page usually scrolls | Optional `document` scroll lock |
+
+**Shared infrastructure (not a single “overlay” component):**
+
+1. **Portal** — default target `document.body`; optional container override for
+   `/docs` demos inside bounded scroll shells
+2. **Layer / z-index policy** — named tiers in one module, not per-component magic
+   numbers; bump z-index by stack depth when multiple layers are open
+3. **Dismiss** — Escape; outside pointer (rules differ per type)
+4. **Styled surface** — semantic colors (`surfaceLighter`, `border`, shadow)
+
+**Suggested z-index tiers:**
+
+| Tier | Use | Base (example) |
+|------|-----|----------------|
+| `sticky` | NavBar | 1000 |
+| `popover` | Popovers, menus | 1100 |
+| `modal` | Dialogs | 1200 |
+| `toast` | Notifications (future) | 1300 |
+
+Increment per open layer in a small `LayerProvider` at app root (mount/unmount
+registers depth). Popover opened inside a modal must stack above that modal.
+
+**Component APIs (sketch):**
+
+- **Popover:** `open` / `onOpenChange`, trigger (child or ref), `placement`,
+  `offset`, collision padding; Radix handles portal, dismiss, positioning
+- **Modal:** same controlled open API; `dismissOnOutsideClick?`,
+  `dismissOnEscape?` (default true), `preventScroll?`, size/layout via children;
+  Radix handles overlay, inert outside, focus trap
+
+**Docs (`/docs`):** sections like Button/NavBar — captions as a behavior matrix:
+outside click, Escape, focus restore, scroll lock, popover inside modal (stacking
+smoke test). Defer NavBar menu migration until Popover/Modal feel right in
+isolation.
+
+**Build order:**
+
+1. Layer scale + portal helper
+2. Popover (styled Radix Popover)
+3. Modal (styled Radix Dialog)
+4. `/docs` examples
+5. Dropdown menu primitive when NavBar returns
+
+**Decisions to lock before implementation:**
+
+- Portal always at `body` vs per-demo container on `/docs`
+- Nested modals: stack with incrementing z-index vs disallow second modal
+- Popover focus: always return to trigger vs move focus into panel for forms
+- SSR: overlays client-only; default closed on server to avoid hydration mismatch
+
+**Why Radix (not full MUI, not positioning-only from scratch):** aligns with
+roadmap dropdowns/modals; battle-tested dismiss, focus, and aria; thin deps;
+styled-components stay the visual source of truth. Floating UI alone would
+still require hand-rolled focus trap and inert behavior for modals.
