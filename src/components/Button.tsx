@@ -1,3 +1,4 @@
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { useTheme } from "./ThemeProvider";
 import styled from "styled-components";
 import type { IconName } from "./Icon/types";
@@ -54,8 +55,6 @@ const StyledButton = styled.button<{
 interface Props {
   prominence?: "primary" | "secondary" | "tertiary";
   colorScheme?: "action" | "danger" | "success" | "brand";
-  disabled?: boolean;
-  onClick?: () => void;
   size?: "default" | "small";
   iconPosition?: "left" | "right" | "alone";
   icon?: IconName;
@@ -65,19 +64,30 @@ interface Props {
   flex?: string;
 }
 
-const Button = ({
-  disabled,
-  onClick,
-  icon,
-  width,
-  flex,
-  margin,
-  text,
-  prominence = "primary",
-  colorScheme = "action",
-  size = "default",
-  iconPosition = "left",
-}: Props) => {
+type NativeButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "color" | "width"
+>;
+
+const Button = forwardRef<HTMLButtonElement, Props & NativeButtonProps>(
+  (
+    {
+      disabled,
+      onClick,
+      icon,
+      width,
+      flex,
+      margin,
+      text,
+      prominence = "primary",
+      colorScheme = "action",
+      size = "default",
+      iconPosition = "left",
+      type = "button",
+      ...rest
+    },
+    ref,
+  ) => {
   const { colors } = useTheme();
 
   // select colors (main, mainAlt, contrast, contrastAlt) based on colorScheme and disabled
@@ -156,12 +166,18 @@ const Button = ({
       $margin={margin}
       iconIsAlone={iconPosition === "alone"}
       disabled={disabled}
+      type={type}
+      ref={ref}
+      {...rest}
     >
       {iconPosition === "left" && icon && <Icon name={icon} />}
       {iconPosition === "alone" && icon ? <Icon name={icon} /> : text}
       {iconPosition === "right" && icon && <Icon name={icon} />}
     </StyledButton>
   );
-};
+  },
+);
+
+Button.displayName = "Button";
 
 export default Button;

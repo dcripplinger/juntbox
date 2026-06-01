@@ -77,79 +77,93 @@ css, primitive and semantic colors, links, buttons, dropdowns, modals,
 breakpoints, icons, toggles, checkboxes, tables, and more. The library will be
 showcased on the in-app `/docs` page.
 
-### Overlays (Popover, Modal, Dropdown menu) — Option B: Radix + styled-components
+### Overlays — Radix + styled-components (Option B)
 
 Use **Radix primitives** for behavior and accessibility; own **styled-components**
-wrappers and theme tokens (same pattern as `Button`). Do **not** build Modal on
-top of Popover as one component — share infrastructure only.
+wrappers and theme tokens (same pattern as `Button`). Share **infrastructure only**
+(`LayerProvider`, z-index tiers, themed surfaces) — not one generic “overlay” component.
 
-**Dependencies (add as needed):**
+**Dependencies in use:**
 
-- `@radix-ui/react-popover` — anchored, non-blocking panels
-- `@radix-ui/react-dialog` — blocking modals / dialogs
-- `@radix-ui/react-dropdown-menu` — later, for list menus (e.g. NavBar); menu
-  keyboard semantics differ from a generic popover
+- `@radix-ui/react-dropdown-menu` — **PopupMenu** (action/navigation menus; NavBar)
+- `@radix-ui/react-dialog` — **Modal** (blocking dialogs)
 
-**Definitions:**
+**Deferred / not built:**
 
-| | Popover | Modal (Dialog) |
+- `@radix-ui/react-popover` — generic anchored panels (filters, pickers); add when a
+  real use case appears — not the same as NavBar menus
+- **Toast** — future; add tier + component when needed
+- **Select** — form value picker; different primitive and semantics than PopupMenu
+
+**How the pieces differ:**
+
+| | PopupMenu | Modal |
 |---|---|---|
-| Anchor | Yes — tied to a trigger element | No — positioned in viewport |
-| Interaction outside | Allowed | Blocked (even if backdrop is transparent) |
-| Outside click | Closes | Configurable: ignore or close |
-| Focus | Optional move into panel; restore on close | Trapped inside; restore on close |
-| Scroll | Page usually scrolls | Optional `document` scroll lock |
+| Radix primitive | Dropdown Menu | Dialog |
+| Anchor | Yes — trigger element | No — viewport-centered |
+| Interaction outside | Allowed (`modal={false}`) | Blocked |
+| Outside click / Escape | Dismisses menu | Dismisses → `onClose` |
+| Parent API | Uncontrolled; `trigger` + `sections` | Mount when open; `onClose` |
+| Scroll | Page keeps scrolling | `document.body` scroll lock |
 
-**Shared infrastructure (not a single “overlay” component):**
+**Shared infrastructure (done):**
 
-1. **Portal** — default target `document.body`; optional container override for
-   `/docs` demos inside bounded scroll shells
-2. **Layer / z-index policy** — named tiers in one module, not per-component magic
-   numbers; bump z-index by stack depth when multiple layers are open
-3. **Dismiss** — Escape; outside pointer (rules differ per type)
-4. **Styled surface** — semantic colors (`surfaceLighter`, `border`, shadow)
+1. **`LayerProvider`** at app root — ephemeral overlays register on mount; z-index
+   bumps by stack depth (e.g. menu above an open modal)
+2. **`layers.ts`** — overlay tiers only: `popupMenu` 1000, `modal` 1100 (no NavBar
+   tier; layout chrome is not a managed layer)
+3. **Themed surfaces** — `surfaceLighter`, `border`, shadow via `useTheme()`
+4. **Portal** — both components portal to `document.body` by default
 
-**Suggested z-index tiers:**
+**PopupMenu (done):**
 
-| Tier | Use | Base (example) |
-|------|-----|----------------|
-| `sticky` | NavBar | 1000 |
-| `popover` | Popovers, menus | 1100 |
-| `modal` | Dialogs | 1200 |
-| `toast` | Notifications (future) | 1300 |
+- Prop-driven API: `trigger` (element), `sections` (`{ label, href? }[][]`), optional
+  `side` / `align`
+- Sections separated by dividers; empty sections skipped
+- Items with `href` render as links; label-only items dismiss without navigating
+- NavBar hamburger and account menus use PopupMenu
 
-Increment per open layer in a small `LayerProvider` at app root (mount/unmount
-registers depth). Popover opened inside a modal must stack above that modal.
+**Modal (done):**
 
-**Component APIs (sketch):**
+- Parent renders `{open && <Modal onClose={...} title? children />}` — no `open` prop
+- `onClose` when dismissed (outside click, Escape, or app controls)
+- Optional `title` → `Dialog.Title` for accessibility; body/actions in `children`
+- Fixed dismiss + scroll-lock behavior (not exposed as props yet)
+- Max width ~40rem; `max-height` + internal scroll for tall content; sized vs viewport
 
-- **Popover:** `open` / `onOpenChange`, trigger (child or ref), `placement`,
-  `offset`, collision padding; Radix handles portal, dismiss, positioning
-- **Modal:** same controlled open API; `dismissOnOutsideClick?`,
-  `dismissOnEscape?` (default true), `preventScroll?`, size/layout via children;
-  Radix handles overlay, inert outside, focus trap
+**`/docs` (done):**
 
-**Docs (`/docs`):** sections like Button/NavBar — captions as a behavior matrix:
-outside click, Escape, focus restore, scroll lock, popover inside modal (stacking
-smoke test). Defer NavBar menu migration until Popover/Modal feel right in
-isolation.
+- Per-component intros, prop tables, live playgrounds (Button, Icon, NavBar, PopupMenu,
+  Modal), and generated code snippets where controls apply
 
-**Build order:**
+**Build order (original → status):**
 
-1. Layer scale + portal helper
-2. Popover (styled Radix Popover)
-3. Modal (styled Radix Dialog)
-4. `/docs` examples
-5. Dropdown menu primitive when NavBar returns
+1. ~~Layer scale + portal helper~~ — done (`layers.ts`, `LayerProvider`)
+2. ~~Popover~~ — skipped; use PopupMenu for menus; generic Popover later if needed
+3. ~~Modal~~ — done
+4. ~~`/docs` examples~~ — done (expanded with playgrounds)
+5. ~~NavBar menus~~ — done (PopupMenu)
 
-**Decisions to lock before implementation:**
+**Decisions locked:**
 
-- Portal always at `body` vs per-demo container on `/docs`
-- Nested modals: stack with incrementing z-index vs disallow second modal
-- Popover focus: always return to trigger vs move focus into panel for forms
-- SSR: overlays client-only; default closed on server to avoid hydration mismatch
+- **PopupMenu vs “dropdown” naming** — “PopupMenu” for action menus; “dropdown” reserved
+  for future `<select>`-style controls (Radix Select / Combobox)
+- **PopupMenu uncontrolled** — no `open` / `onOpenChange`; parent only mounts trigger +
+  menu tree; coordinate sibling menus via Radix dismiss, not parent state
+- **Modal mount + `onClose`** — not `open` + `onOpenChange`; parent owns visibility by
+  rendering
+- **NavBar not in LayerProvider** — sticky layout chrome; no z-index tier required so far
+- **Bounded portal** — not supported for Modal (fixed + `vh`/`vw`); body portal only
+- **Nested modals** — allowed; `LayerProvider` increments z-index per open layer
+- **SSR** — overlays client-only; mount when open on the client
 
-**Why Radix (not full MUI, not positioning-only from scratch):** aligns with
-roadmap dropdowns/modals; battle-tested dismiss, focus, and aria; thin deps;
-styled-components stay the visual source of truth. Floating UI alone would
-still require hand-rolled focus trap and inert behavior for modals.
+**Future (when needed):**
+
+- Toast tier + component above modal
+- Generic **Popover** for non-menu anchored panels
+- **AlertDialog** for destructive confirms
+- Modal exit animations (`forceMount` + close delay before `onClose`)
+- Optional Modal props: non-dismissible, custom width, bounded-container mode
+
+**Why Radix:** battle-tested dismiss, focus, and aria; thin deps; styled-components stay
+the visual source of truth.

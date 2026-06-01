@@ -4,6 +4,7 @@ import { type AppType } from "next/app";
 import { Geist } from "next/font/google";
 
 import { api } from "~/utils/api";
+import { LayerProvider } from "~/components/overlays";
 
 import "~/styles/globals.css";
 
@@ -23,7 +24,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
         }
       `}</style>
       <SessionProvider session={session}>
-        <Component {...pageProps} />
+        <LayerProvider>
+          <Component {...pageProps} />
+        </LayerProvider>
       </SessionProvider>
     </>
   );

@@ -1,14 +1,27 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import styled from "styled-components";
 import ThemeProvider from "~/components/ThemeProvider";
 import Button from "~/components/Button";
 import Icon, { iconNames } from "~/components/Icon/Icon";
+import type { IconName } from "~/components/Icon/types";
 import { NavBar, type NavBarLink } from "~/components/NavBar";
+import { Modal, PopupMenu, layerTiers } from "~/components/overlays";
 import {
   primitiveColors,
   semanticColors,
   type SemanticColorSet,
 } from "~/styles/colors";
+import {
+  CodeExample,
+  ComponentIntro,
+  ControlCheckboxLabel,
+  ControlLabel,
+  ControlSelect,
+  Controls,
+  DemoPreview,
+  Playground,
+  PropTable,
+} from "./docsUi";
 
 // ---------------------------------------------------------------------------
 // Layout
@@ -319,15 +332,101 @@ const navItems = [
     { id: "components-button", label: "Button" },
     { id: "components-icon", label: "Icon" },
     { id: "components-navbar", label: "NavBar" },
+    { id: "components-overlays", label: "Overlays" },
   ]},
 ];
 
 const buttonProminences = ["primary", "secondary", "tertiary"] as const;
 const buttonColorSchemes = ["action", "danger", "success", "brand"] as const;
+const buttonIconPositions = ["left", "right", "alone"] as const;
+const iconSizes = ["1.25rem", "1.5rem", "2.5rem", "3rem"] as const;
+const menuSides = ["top", "right", "bottom", "left"] as const;
+const menuAligns = ["start", "center", "end"] as const;
+
+type ButtonProminence = (typeof buttonProminences)[number];
+type ButtonColorScheme = (typeof buttonColorSchemes)[number];
+type ButtonIconPosition = (typeof buttonIconPositions)[number];
+
+function buildButtonCode(opts: {
+  text: string;
+  prominence: ButtonProminence;
+  colorScheme: ButtonColorScheme;
+  size: "default" | "small";
+  disabled: boolean;
+  icon?: IconName;
+  iconPosition: ButtonIconPosition;
+}) {
+  const lines = ["<Button", `  text="${opts.text}"`];
+  if (opts.prominence !== "primary") lines.push(`  prominence="${opts.prominence}"`);
+  if (opts.colorScheme !== "action") lines.push(`  colorScheme="${opts.colorScheme}"`);
+  if (opts.size !== "default") lines.push(`  size="${opts.size}"`);
+  if (opts.disabled) lines.push("  disabled");
+  if (opts.icon) {
+    lines.push(`  icon="${opts.icon}"`);
+    if (opts.iconPosition !== "left") lines.push(`  iconPosition="${opts.iconPosition}"`);
+  }
+  lines.push("/>");
+  return lines.join("\n");
+}
+
+function buildIconCode(name: IconName, size: string) {
+  if (size === "1.5rem") return `<Icon name="${name}" />`;
+  return `<Icon name="${name}" size="${size}" />`;
+}
+
+function buildPopupMenuCode(align: string, side: string) {
+  const lines = [
+    "<PopupMenu",
+    '  trigger={<Button text="Open menu" />}',
+    "  sections={[",
+    '    [{ label: "Item one" }, { label: "Item two" }],',
+    '    [{ label: "Item three" }],',
+    "  ]}",
+  ];
+  if (side !== "bottom") lines.push(`  side="${side}"`);
+  if (align !== "start") lines.push(`  align="${align}"`);
+  lines.push("/>");
+  return lines.join("\n");
+}
+
+function buildModalCode(title?: string) {
+  const lines = [
+    "{modalOpen && (",
+    "  <Modal",
+    title ? `    title="${title}"` : null,
+    "    onClose={() => setModalOpen(false)}",
+    "  >",
+    "    {/* content */}",
+    "  </Modal>",
+    ")}",
+  ].filter((line): line is string => line !== null);
+  return lines.join("\n");
+}
 
 export default function DocsPage() {
   const publicDesktopScrollRef = useRef<HTMLDivElement>(null);
   const publicMobileScrollRef = useRef<HTMLDivElement>(null);
+  const navPlayScrollRef = useRef<HTMLDivElement>(null);
+
+  const [btnText, setBtnText] = useState("Submit");
+  const [btnProminence, setBtnProminence] = useState<ButtonProminence>("primary");
+  const [btnColorScheme, setBtnColorScheme] = useState<ButtonColorScheme>("action");
+  const [btnSize, setBtnSize] = useState<"default" | "small">("default");
+  const [btnDisabled, setBtnDisabled] = useState(false);
+  const [btnIcon, setBtnIcon] = useState<IconName | "">("");
+  const [btnIconPosition, setBtnIconPosition] =
+    useState<ButtonIconPosition>("left");
+
+  const [iconDemoName, setIconDemoName] = useState<IconName>("star");
+  const [iconDemoSize, setIconDemoSize] = useState<string>("1.5rem");
+
+  const [menuAlign, setMenuAlign] = useState<(typeof menuAligns)[number]>("start");
+  const [menuSide, setMenuSide] = useState<(typeof menuSides)[number]>("bottom");
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const [navPlayPublic, setNavPlayPublic] = useState(true);
+  const [navPlayMobile, setNavPlayMobile] = useState(false);
 
   return (
     <ThemeProvider>
@@ -349,6 +448,10 @@ export default function DocsPage() {
           {/* ---------------------------------------------------------------- */}
           <Section id="colors-primitives">
             <SectionTitle>Colors — Primitives</SectionTitle>
+            <ComponentIntro>
+              Raw palette values grouped by hue. Semantic tokens in the app reference these
+              primitives; prefer semantic colors in components so light/dark mode can swap later.
+            </ComponentIntro>
             {Object.entries(primitiveColors).map(([groupName, shades]) => (
               <ColorGroup key={groupName}>
                 <ColorGroupName>{groupName}</ColorGroupName>
@@ -365,11 +468,19 @@ export default function DocsPage() {
 
           <Section id="colors-semantic-light">
             <SectionTitle>Colors — Semantic (light mode)</SectionTitle>
+            <ComponentIntro>
+              Named tokens consumed via <code>useTheme()</code> — e.g.{" "}
+              <code>colors.action</code>, <code>colors.surfaceLighter</code>,{" "}
+              <code>colors.border</code>.
+            </ComponentIntro>
             <SemanticSwatches colors={semanticColors.light} />
           </Section>
 
           <Section id="colors-semantic-dark">
             <SectionTitle>Colors — Semantic (dark mode)</SectionTitle>
+            <ComponentIntro>
+              Same token names as light mode with inverted surfaces and contrast pairings.
+            </ComponentIntro>
             <SemanticSwatches colors={semanticColors.dark} />
           </Section>
 
@@ -378,8 +489,144 @@ export default function DocsPage() {
           {/* ---------------------------------------------------------------- */}
           <Section id="components-button">
             <SectionTitle>Button</SectionTitle>
+            <ComponentIntro>
+              Primary actions and controls. Variants combine <strong>prominence</strong> (visual
+              weight) with <strong>colorScheme</strong> (semantic intent). Supports optional
+              icons and forwards native button props for use as Radix triggers.
+            </ComponentIntro>
 
-            <SectionSubtitle>Prominence × Color scheme</SectionSubtitle>
+            <SectionSubtitle>Playground</SectionSubtitle>
+            <Playground>
+              <DemoPreview>
+                <Button
+                  text={btnText}
+                  prominence={btnProminence}
+                  colorScheme={btnColorScheme}
+                  size={btnSize}
+                  disabled={btnDisabled}
+                  icon={btnIcon || undefined}
+                  iconPosition={btnIcon ? btnIconPosition : undefined}
+                />
+              </DemoPreview>
+              <Controls>
+                <ControlLabel>
+                  text
+                  <ControlSelect
+                    value={btnText}
+                    onChange={(e) => setBtnText(e.target.value)}
+                  >
+                    <option value="Submit">Submit</option>
+                    <option value="Cancel">Cancel</option>
+                    <option value="Delete">Delete</option>
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  prominence
+                  <ControlSelect
+                    value={btnProminence}
+                    onChange={(e) =>
+                      setBtnProminence(e.target.value as ButtonProminence)
+                    }
+                  >
+                    {buttonProminences.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  colorScheme
+                  <ControlSelect
+                    value={btnColorScheme}
+                    onChange={(e) =>
+                      setBtnColorScheme(e.target.value as ButtonColorScheme)
+                    }
+                  >
+                    {buttonColorSchemes.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  size
+                  <ControlSelect
+                    value={btnSize}
+                    onChange={(e) =>
+                      setBtnSize(e.target.value as "default" | "small")
+                    }
+                  >
+                    <option value="default">default</option>
+                    <option value="small">small</option>
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  icon
+                  <ControlSelect
+                    value={btnIcon}
+                    onChange={(e) => setBtnIcon(e.target.value as IconName | "")}
+                  >
+                    <option value="">none</option>
+                    {iconNames.map((name) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+                {btnIcon ? (
+                  <ControlLabel>
+                    iconPosition
+                    <ControlSelect
+                      value={btnIconPosition}
+                      onChange={(e) =>
+                        setBtnIconPosition(e.target.value as ButtonIconPosition)
+                      }
+                    >
+                      {buttonIconPositions.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </ControlSelect>
+                  </ControlLabel>
+                ) : null}
+                <ControlCheckboxLabel>
+                  <input
+                    type="checkbox"
+                    checked={btnDisabled}
+                    onChange={(e) => setBtnDisabled(e.target.checked)}
+                  />
+                  disabled
+                </ControlCheckboxLabel>
+              </Controls>
+              <CodeExample>
+                {buildButtonCode({
+                  text: btnText,
+                  prominence: btnProminence,
+                  colorScheme: btnColorScheme,
+                  size: btnSize,
+                  disabled: btnDisabled,
+                  icon: btnIcon || undefined,
+                  iconPosition: btnIconPosition,
+                })}
+              </CodeExample>
+            </Playground>
+
+            <PropTable>
+              <thead>
+                <tr>
+                  <th>Prop</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>text</code></td><td>string</td><td>—</td></tr>
+                <tr><td><code>prominence</code></td><td>primary | secondary | tertiary</td><td>primary</td></tr>
+                <tr><td><code>colorScheme</code></td><td>action | danger | success | brand</td><td>action</td></tr>
+                <tr><td><code>size</code></td><td>default | small</td><td>default</td></tr>
+                <tr><td><code>icon</code></td><td>IconName</td><td>—</td></tr>
+                <tr><td><code>iconPosition</code></td><td>left | right | alone</td><td>left</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td>false</td></tr>
+              </tbody>
+            </PropTable>
+
+            <SectionSubtitle>All variants</SectionSubtitle>
             {buttonProminences.map((prominence) => (
               <div key={prominence}>
                 <SectionSubtitle>{prominence}</SectionSubtitle>
@@ -425,16 +672,43 @@ export default function DocsPage() {
           {/* ---------------------------------------------------------------- */}
           <Section id="components-icon">
             <SectionTitle>Icon</SectionTitle>
+            <ComponentIntro>
+              Material Icons (Rounded) plus custom SVG icons. Default size is{" "}
+              <code>1.5rem</code>. Pass a CSS length to <code>size</code> for larger/smaller
+              rendering.
+            </ComponentIntro>
 
-            <SectionSubtitle>Sizes</SectionSubtitle>
-            <ButtonRow>
-              {(["1.25rem", "1.5rem", "2.5rem", "3rem"] as const).map((size) => (
-                <div key={size} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>
-                  <Icon name="star" size={size} />
-                  <VariantLabel style={{ textAlign: "center" }}>{size}</VariantLabel>
-                </div>
-              ))}
-            </ButtonRow>
+            <SectionSubtitle>Playground</SectionSubtitle>
+            <Playground>
+              <DemoPreview>
+                <Icon name={iconDemoName} size={iconDemoSize} />
+              </DemoPreview>
+              <Controls>
+                <ControlLabel>
+                  name
+                  <ControlSelect
+                    value={iconDemoName}
+                    onChange={(e) => setIconDemoName(e.target.value as IconName)}
+                  >
+                    {iconNames.map((name) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  size
+                  <ControlSelect
+                    value={iconDemoSize}
+                    onChange={(e) => setIconDemoSize(e.target.value)}
+                  >
+                    {iconSizes.map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+              </Controls>
+              <CodeExample>{buildIconCode(iconDemoName, iconDemoSize)}</CodeExample>
+            </Playground>
 
             <SectionSubtitle>All icons</SectionSubtitle>
             <IconGrid>
@@ -452,6 +726,85 @@ export default function DocsPage() {
           {/* ---------------------------------------------------------------- */}
           <Section id="components-navbar">
             <SectionTitle>NavBar</SectionTitle>
+            <ComponentIntro>
+              Sticky top navigation with public/private layouts. Uses{" "}
+              <code>PopupMenu</code> for the hamburger and account menus. On public pages the bar
+              hides on scroll-down and reappears on scroll-up. Pass{" "}
+              <code>scrollRootRef</code> when the nav lives inside a bounded scroll shell (as in
+              the demos below).
+            </ComponentIntro>
+            <CodeExample>{`import { NavBar } from "~/components/NavBar";
+
+<NavBar
+  isPublicPage={false}
+  isMobile={false}
+  publicLinks={[{ href: "/", label: "Home" }]}
+  userLinks={[{ href: "/profile", label: "Profile" }]}
+  projectLinks={[{ href: "/dashboard", label: "Dashboard" }]}
+/>`}</CodeExample>
+
+            <SectionSubtitle>Playground</SectionSubtitle>
+            <Playground>
+              <Controls>
+                <ControlCheckboxLabel>
+                  <input
+                    type="checkbox"
+                    checked={navPlayPublic}
+                    onChange={(e) => setNavPlayPublic(e.target.checked)}
+                  />
+                  isPublicPage
+                </ControlCheckboxLabel>
+                <ControlCheckboxLabel>
+                  <input
+                    type="checkbox"
+                    checked={navPlayMobile}
+                    onChange={(e) => setNavPlayMobile(e.target.checked)}
+                  />
+                  isMobile
+                </ControlCheckboxLabel>
+              </Controls>
+              <NavBarDemoShell id="navbar-demo-playground" $narrow={navPlayMobile}>
+                <NavBar
+                  isPublicPage={navPlayPublic}
+                  isMobile={navPlayMobile}
+                  {...makeDemoNavLinks("navbar-demo-playground")}
+                  scrollRootRef={navPlayPublic ? navPlayScrollRef : undefined}
+                />
+                <DemoMain ref={navPlayScrollRef}>
+                  <DemoParagraph>
+                    Scroll this frame to test hide/show on public pages. Toggle the props above
+                    to switch layouts.
+                  </DemoParagraph>
+                  <DemoParagraph>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+                    tempor incididunt ut labore et dolore magna aliqua.
+                  </DemoParagraph>
+                  <DemoParagraph>
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                  </DemoParagraph>
+                </DemoMain>
+              </NavBarDemoShell>
+            </Playground>
+
+            <PropTable>
+              <thead>
+                <tr>
+                  <th>Prop</th>
+                  <th>Type</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>isPublicPage</code></td><td>boolean</td><td>Marketing vs app layout</td></tr>
+                <tr><td><code>isMobile</code></td><td>boolean</td><td>Hamburger vs inline links</td></tr>
+                <tr><td><code>publicLinks</code></td><td>{`{ href, label }[]`}</td><td>Site-wide links</td></tr>
+                <tr><td><code>userLinks</code></td><td>{`{ href, label }[]`}</td><td>Account menu items</td></tr>
+                <tr><td><code>projectLinks</code></td><td>{`{ href, label }[]`}</td><td>App links (mobile hamburger)</td></tr>
+                <tr><td><code>scrollRootRef</code></td><td>Ref</td><td>Scroll container for hide/show</td></tr>
+              </tbody>
+            </PropTable>
+
+            <SectionSubtitle>Examples</SectionSubtitle>
 
             <SectionSubtitle>Public page, desktop</SectionSubtitle>
             <PreviewCaption>isPublicPage=true, isMobile=false — scroll inside the frame to see the bar hide</PreviewCaption>
@@ -465,12 +818,12 @@ export default function DocsPage() {
               <DemoMain ref={publicDesktopScrollRef}>
                 <DemoHeading>Build better products, together.</DemoHeading>
                 <DemoParagraph>
-                  Juntbox brings your entire team's work into one place so you
+                  Juntbox brings your entire team&apos;s work into one place so you
                   can ship with confidence. No more scattered threads, lost
                   decisions, or surprise blockers.
                 </DemoParagraph>
                 <DemoParagraph>
-                  Whether you're a two-person startup or a scaling org, Juntbox
+                  Whether you&apos;re a two-person startup or a scaling org, Juntbox
                   adapts to how you work—not the other way around.
                 </DemoParagraph>
                 <DemoSubheading>Everything you need</DemoSubheading>
@@ -485,7 +838,7 @@ export default function DocsPage() {
                 </DemoParagraph>
                 <DemoSubheading>Loved by teams</DemoSubheading>
                 <DemoParagraph>
-                  Join thousands of teams who've made Juntbox the center of
+                  Join thousands of teams who&apos;ve made Juntbox the center of
                   their workflow. Transparent pricing, no surprise fees.
                 </DemoParagraph>
               </DemoMain>
@@ -503,11 +856,11 @@ export default function DocsPage() {
               <DemoMain ref={publicMobileScrollRef}>
                 <DemoHeading>Build better products, together.</DemoHeading>
                 <DemoParagraph>
-                  Juntbox brings your entire team's work into one place so you
+                  Juntbox brings your entire team&apos;s work into one place so you
                   can ship with confidence.
                 </DemoParagraph>
                 <DemoParagraph>
-                  Whether you're a two-person startup or a scaling org, Juntbox
+                  Whether you&apos;re a two-person startup or a scaling org, Juntbox
                   adapts to how you work.
                 </DemoParagraph>
                 <DemoSubheading>Everything you need</DemoSubheading>
@@ -578,6 +931,132 @@ export default function DocsPage() {
                 <DemoParagraph>Bob closed 5 tasks in Project Beta.</DemoParagraph>
               </DemoMain>
             </NavBarDemoShell>
+          </Section>
+
+          {/* ---------------------------------------------------------------- */}
+          {/* OVERLAYS                                                         */}
+          {/* ---------------------------------------------------------------- */}
+          <Section id="components-overlays">
+            <SectionTitle>Overlays</SectionTitle>
+            <ComponentIntro>
+              Portaled UI layered above page content. Z-index tiers: popupMenu=
+              {layerTiers.popupMenu}, modal={layerTiers.modal}.{" "}
+              <code>LayerProvider</code> (at app root) bumps z-index when multiple overlays are
+              open so a menu inside a modal stacks correctly.
+            </ComponentIntro>
+
+            <SectionSubtitle>PopupMenu</SectionSubtitle>
+            <ComponentIntro>
+              Action/navigation menu anchored to a trigger. Uncontrolled — opens on trigger click,
+              closes on outside click or Escape. Non-modal: page scroll and outside interaction
+              remain available. Items with <code>href</code> render as links; label-only items
+              dismiss without navigating.
+            </ComponentIntro>
+            <Playground>
+              <DemoPreview>
+                <PopupMenu
+                  trigger={<Button text="Open menu" />}
+                  sections={[
+                    [{ label: "Item one" }, { label: "Item two" }],
+                    [{ label: "Item three" }],
+                  ]}
+                  side={menuSide}
+                  align={menuAlign}
+                />
+              </DemoPreview>
+              <Controls>
+                <ControlLabel>
+                  side
+                  <ControlSelect
+                    value={menuSide}
+                    onChange={(e) =>
+                      setMenuSide(e.target.value as (typeof menuSides)[number])
+                    }
+                  >
+                    {menuSides.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+                <ControlLabel>
+                  align
+                  <ControlSelect
+                    value={menuAlign}
+                    onChange={(e) =>
+                      setMenuAlign(e.target.value as (typeof menuAligns)[number])
+                    }
+                  >
+                    {menuAligns.map((v) => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </ControlSelect>
+                </ControlLabel>
+              </Controls>
+              <CodeExample>{buildPopupMenuCode(menuAlign, menuSide)}</CodeExample>
+            </Playground>
+            <PropTable>
+              <thead>
+                <tr>
+                  <th>Prop</th>
+                  <th>Type</th>
+                  <th>Default</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>trigger</code></td><td>ReactElement</td><td>—</td></tr>
+                <tr><td><code>sections</code></td><td>{`{ label, href? }[][]`}</td><td>—</td></tr>
+                <tr><td><code>side</code></td><td>top | right | bottom | left</td><td>bottom</td></tr>
+                <tr><td><code>align</code></td><td>start | center | end</td><td>start</td></tr>
+              </tbody>
+            </PropTable>
+
+            <SectionSubtitle>Modal</SectionSubtitle>
+            <ComponentIntro>
+              Blocking dialog with backdrop, focus trap, and document scroll lock.
+              Render when open; dismiss via outside click, Escape, or{" "}
+              <code>onClose</code> from your own controls.
+            </ComponentIntro>
+            <Playground>
+              <DemoPreview>
+                <Button text="Open modal" onClick={() => setModalOpen(true)} />
+              </DemoPreview>
+              <CodeExample>{buildModalCode("Example modal")}</CodeExample>
+            </Playground>
+            {modalOpen ? (
+              <Modal
+                title="Example modal"
+                onClose={() => setModalOpen(false)}
+              >
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                <p style={{ margin: 0, lineHeight: 1.6, color: "#555" }}>
+                  Click outside, press Escape, or use the buttons below to close.
+                  The parent unmounts this modal when <code>onClose</code> runs.
+                </p>
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                  <Button
+                    text="Close"
+                    prominence="secondary"
+                    onClick={() => setModalOpen(false)}
+                  />
+                  <Button text="Confirm" onClick={() => setModalOpen(false)} />
+                </div>
+              </div>
+              </Modal>
+            ) : null}
+            <PropTable>
+              <thead>
+                <tr>
+                  <th>Prop</th>
+                  <th>Type</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>onClose</code></td><td>() =&gt; void</td><td>Called when dismissed</td></tr>
+                <tr><td><code>title</code></td><td>ReactNode</td><td>Optional; sets accessible dialog title</td></tr>
+                <tr><td><code>children</code></td><td>ReactNode</td><td>Body and actions</td></tr>
+              </tbody>
+            </PropTable>
           </Section>
         </Content>
       </PageLayout>

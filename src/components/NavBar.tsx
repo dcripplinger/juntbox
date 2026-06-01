@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useTheme } from "./ThemeProvider";
 import Link from "next/link";
 import Icon from "./Icon/Icon";
+import { PopupMenu } from "./overlays";
 
 export type NavBarLink = { href: string; label: string };
 
@@ -29,17 +30,15 @@ interface Props {
 /**
  * Outer wrapper: sticky within the nearest scroll container (either a bounded
  * shell or the viewport), animates height so layout space collapses cleanly
- * when the bar hides. overflow switches to visible when a menu is open so
- * dropdowns are not clipped.
+ * when the bar hides.
  */
-const StickySlot = styled.div<{ $show: boolean; $hasOpenMenu: boolean }>`
+const StickySlot = styled.div<{ $show: boolean }>`
   position: sticky;
   top: 0;
   width: 100%;
   flex-shrink: 0;
-  z-index: 1000;
   height: ${(props) => (props.$show ? "3rem" : "0")};
-  overflow: ${(props) => (props.$hasOpenMenu ? "visible" : "hidden")};
+  overflow: hidden;
   transition: height 0.3s ease-in-out;
 `;
 
@@ -57,39 +56,6 @@ const PublicLinks = styled.div`
   display: flex;
   gap: 1.5rem;
   align-items: center;
-`;
-
-const Dropdown = styled.div<{ backgroundColor: string }>`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: ${({ backgroundColor }) => backgroundColor};
-  border-radius: 4px;
-  padding: 0.5rem 0;
-  min-width: 200px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const DropdownSection = styled.div<{ borderColor: string }>`
-  padding: 0.5rem 0;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid ${({ borderColor }) => borderColor};
-  }
-`;
-
-const DropdownItem = styled.a<{
-  textColor: string;
-  hoverBackgroundColor: string;
-}>`
-  display: block;
-  padding: 0.5rem 1rem;
-  color: ${({ textColor }) => textColor};
-  text-decoration: none;
-
-  &:hover {
-    background-color: ${({ hoverBackgroundColor }) => hoverBackgroundColor};
-  }
 `;
 
 const IconButton = styled.button<{ textColor: string }>`
@@ -148,25 +114,18 @@ export const NavBar = ({
   scrollRootRef,
 }: Props) => {
   const { colors } = useTheme();
-  const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const showNav = useScrollDirection(scrollRootRef);
 
-  const toggleHamburger = () => {
-    setIsHamburgerOpen(!isHamburgerOpen);
-    setIsUserMenuOpen(false);
-  };
-
-  const toggleUserMenu = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
-    setIsHamburgerOpen(false);
-  };
-
   const show = isPublicPage ? showNav : true;
-  const hasOpenMenu = isHamburgerOpen || isUserMenuOpen;
+
+  const hamburgerSections = [
+    ...(!isPublicPage && isMobile ? [projectLinks] : []),
+    publicLinks,
+    ...(isMobile ? [userLinks] : []),
+  ];
 
   return (
-    <StickySlot $show={show} $hasOpenMenu={hasOpenMenu}>
+    <StickySlot $show={show}>
       <Container backgroundColor={colors.surfaceLighter}>
         {isPublicPage && !isMobile ? (
           <PublicLinks>
@@ -180,80 +139,27 @@ export const NavBar = ({
             ))}
           </PublicLinks>
         ) : (
-          <IconButton onClick={toggleHamburger} textColor={colors.text}>
-            <Icon name="menu" />
-          </IconButton>
-        )}
-        {isHamburgerOpen && (
-          <Dropdown backgroundColor={colors.surfaceLighter}>
-            {!isPublicPage && isMobile && (
-              <DropdownSection borderColor={colors.border}>
-                {projectLinks.map((link) => (
-                  <DropdownItem
-                    key={link.href}
-                    href={link.href}
-                    textColor={colors.text}
-                    hoverBackgroundColor={colors.surface}
-                  >
-                    {link.label}
-                  </DropdownItem>
-                ))}
-              </DropdownSection>
-            )}
-            <DropdownSection borderColor={colors.border}>
-              {publicLinks.map((link) => (
-                <DropdownItem
-                  key={link.href}
-                  href={link.href}
-                  textColor={colors.text}
-                  hoverBackgroundColor={colors.surface}
-                >
-                  {link.label}
-                </DropdownItem>
-              ))}
-            </DropdownSection>
-            {isMobile && (
-              <DropdownSection borderColor={colors.border}>
-                {userLinks.map((link) => (
-                  <DropdownItem
-                    key={link.href}
-                    href={link.href}
-                    textColor={colors.text}
-                    hoverBackgroundColor={colors.surface}
-                  >
-                    {link.label}
-                  </DropdownItem>
-                ))}
-              </DropdownSection>
-            )}
-          </Dropdown>
+          <PopupMenu
+            trigger={
+              <IconButton textColor={colors.text}>
+                <Icon name="menu" />
+              </IconButton>
+            }
+            sections={hamburgerSections}
+            align="start"
+          />
         )}
 
         {!isMobile && (
-          <>
-            <UserButton onClick={toggleUserMenu} textColor={colors.text}>
-              <Icon name="account_circle" />
-            </UserButton>
-            {isUserMenuOpen && (
-              <Dropdown
-                backgroundColor={colors.surfaceLighter}
-                style={{ right: 0 }}
-              >
-                <DropdownSection borderColor={colors.border}>
-                  {userLinks.map((link) => (
-                    <DropdownItem
-                      key={link.href}
-                      href={link.href}
-                      textColor={colors.text}
-                      hoverBackgroundColor={colors.surface}
-                    >
-                      {link.label}
-                    </DropdownItem>
-                  ))}
-                </DropdownSection>
-              </Dropdown>
-            )}
-          </>
+          <PopupMenu
+            trigger={
+              <UserButton textColor={colors.text}>
+                <Icon name="account_circle" />
+              </UserButton>
+            }
+            sections={[userLinks]}
+            align="end"
+          />
         )}
       </Container>
     </StickySlot>
