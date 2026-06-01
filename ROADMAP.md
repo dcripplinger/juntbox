@@ -80,8 +80,8 @@ showcased on the in-app `/docs` page.
 ### Overlays — Radix + styled-components (Option B)
 
 Use **Radix primitives** for behavior and accessibility; own **styled-components**
-wrappers and theme tokens (same pattern as `Button`). Share **infrastructure only**
-(`LayerProvider`, z-index tiers, themed surfaces) — not one generic “overlay” component.
+wrappers and theme tokens (same pattern as `Button`). Share **themed surfaces** and
+portal conventions — not one generic “overlay” component.
 
 **Dependencies in use:**
 
@@ -108,12 +108,10 @@ wrappers and theme tokens (same pattern as `Button`). Share **infrastructure onl
 
 **Shared infrastructure (done):**
 
-1. **`LayerProvider`** at app root — ephemeral overlays register on mount; z-index
-   bumps by stack depth (e.g. menu above an open modal)
-2. **`layers.ts`** — overlay tiers only: `popupMenu` 1000, `modal` 1100 (no NavBar
-   tier; layout chrome is not a managed layer)
-3. **Themed surfaces** — `surfaceLighter`, `border`, shadow via `useTheme()`
-4. **Portal** — both components portal to `document.body` by default
+1. **Themed surfaces** — `surfaceLighter`, `border`, shadow via `useTheme()`
+2. **Portal** — both components portal to `document.body` by default; PopupMenu
+   optional `portalContainer` for bounded shells. Stacking: no global z-index registry;
+   portaled siblings rely on mount order (most recent on top).
 
 **PopupMenu (done):**
 
@@ -138,7 +136,7 @@ wrappers and theme tokens (same pattern as `Button`). Share **infrastructure onl
 
 **Build order (original → status):**
 
-1. ~~Layer scale + portal helper~~ — done (`layers.ts`, `LayerProvider`)
+1. ~~Layer scale + portal helper~~ — removed; DOM mount order + optional `portalContainer`
 2. ~~Popover~~ — skipped; use PopupMenu for menus; generic Popover later if needed
 3. ~~Modal~~ — done
 4. ~~`/docs` examples~~ — done (expanded with playgrounds)
@@ -152,14 +150,17 @@ wrappers and theme tokens (same pattern as `Button`). Share **infrastructure onl
   menu tree; coordinate sibling menus via Radix dismiss, not parent state
 - **Modal mount + `onClose`** — not `open` + `onOpenChange`; parent owns visibility by
   rendering
-- **NavBar not in LayerProvider** — sticky layout chrome; no z-index tier required so far
-- **Bounded portal** — not supported for Modal (fixed + `vh`/`vw`); body portal only
-- **Nested modals** — allowed; `LayerProvider` increments z-index per open layer
+- **NavBar** — sticky layout chrome; no overlay z-index
+- **Bounded portal** — not supported for Modal (fixed + `vh`/`vw`); body portal only.
+  PopupMenu supports `portalContainer`
+- **Nested modals** — allowed; stacking via portal mount order
+- **Z-index policy** — overlays use no z-index; other UI (e.g. FAB) uses local stacking
+  contexts only
 - **SSR** — overlays client-only; mount when open on the client
 
 **Future (when needed):**
 
-- Toast tier + component above modal
+- Toast component (portaled; same stacking conventions as other overlays)
 - Generic **Popover** for non-menu anchored panels
 - **AlertDialog** for destructive confirms
 - Modal exit animations (`forceMount` + close delay before `onClose`)

@@ -5,7 +5,7 @@ import Button from "~/components/Button";
 import Icon, { iconNames } from "~/components/Icon/Icon";
 import type { IconName } from "~/components/Icon/types";
 import { NavBar, type NavBarLink } from "~/components/NavBar";
-import { Modal, PopupMenu, layerTiers } from "~/components/overlays";
+import { Modal, PopupMenu } from "~/components/overlays";
 import {
   primitiveColors,
   semanticColors,
@@ -939,10 +939,11 @@ export default function DocsPage() {
           <Section id="components-overlays">
             <SectionTitle>Overlays</SectionTitle>
             <ComponentIntro>
-              Portaled UI layered above page content. Z-index tiers: popupMenu=
-              {layerTiers.popupMenu}, modal={layerTiers.modal}.{" "}
-              <code>LayerProvider</code> (at app root) bumps z-index when multiple overlays are
-              open so a menu inside a modal stacks correctly.
+              Portaled UI layered above page content. Radix portals to{" "}
+              <code>document.body</code> by default; later mounts paint on top. Use{" "}
+              <code>portalContainer</code> on PopupMenu to portal into a bounded shell. Page-level{" "}
+              z-index should stay in local stacking contexts (e.g. a positioned parent), not on
+              global chrome.
             </ComponentIntro>
 
             <SectionSubtitle>PopupMenu</SectionSubtitle>

@@ -1,9 +1,8 @@
 import * as RadixMenu from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
-import { Fragment, useEffect, useMemo, useState, type ReactElement } from "react";
+import { Fragment, useMemo, useState, type ReactElement } from "react";
 import styled from "styled-components";
 import { useTheme } from "~/components/ThemeProvider";
-import { useLayerManager } from "./LayerProvider";
 
 type Side = "top" | "right" | "bottom" | "left";
 type Align = "start" | "center" | "end";
@@ -24,7 +23,6 @@ const ContentSurface = styled(RadixMenu.Content)<{
   $background: string;
   $border: string;
   $text: string;
-  $zIndex: number;
 }>`
   background: ${(p) => p.$background};
   color: ${(p) => p.$text};
@@ -33,7 +31,6 @@ const ContentSurface = styled(RadixMenu.Content)<{
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0;
   min-width: 12.5rem;
-  z-index: ${(p) => p.$zIndex};
   max-height: var(--radix-dropdown-menu-content-available-height);
   overflow-y: auto;
 `;
@@ -71,9 +68,7 @@ export function PopupMenu({
   portalContainer,
 }: PopupMenuProps) {
   const { colors } = useTheme();
-  const { registerLayer, getTierBase } = useLayerManager();
-  const [isOpen, setIsOpen] = useState(false);
-  const [zIndex, setZIndex] = useState(getTierBase("popupMenu"));
+  const [, setIsOpen] = useState(false);
 
   const visibleSections = useMemo(
     () => sections.filter((section) => section.length > 0),
@@ -88,13 +83,6 @@ export function PopupMenu({
     [portalContainer],
   );
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const reg = registerLayer(getTierBase("popupMenu"));
-    setZIndex(reg.zIndex);
-    return () => reg.unregister();
-  }, [getTierBase, isOpen, registerLayer]);
-
   return (
     <RadixMenu.Root modal={false} onOpenChange={setIsOpen}>
       <RadixMenu.Trigger asChild>{trigger}</RadixMenu.Trigger>
@@ -107,7 +95,6 @@ export function PopupMenu({
           $background={colors.surfaceLighter}
           $border={colors.border}
           $text={colors.text}
-          $zIndex={zIndex}
         >
           {visibleSections.map((section, sectionIndex) => (
             <Fragment key={section[0]?.href ?? section[0]?.label ?? sectionIndex}>
